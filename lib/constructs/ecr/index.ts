@@ -8,7 +8,7 @@ export class MyEcr extends Construct {
     super(scope, id);
 
     this.repository = new Repository(this, 'MyEcrRepo', {
-      repositoryName: 'my-wordpress-app',
+      repositoryName: 'my-wp-infrastructure',
       lifecycleRules: [{ maxImageCount: 10 }],
     });
   }

@@ -143,8 +143,8 @@ export class MyCodePipeline extends Construct {
         new GitHubSourceAction({
           actionName: 'Infra_Source',
           owner: 'Harish123540',
-          repo: 'wordpress-infra',
-          branch: 'master',
+          repo: 'my-wp-infrastructure',
+          branch: 'main',
           oauthToken: props.githubTokenSecret.secretValue,
           output: infraSourceOutput,
         }),
