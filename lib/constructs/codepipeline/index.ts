@@ -47,7 +47,7 @@ export class MyCodePipeline extends Construct {
         IMAGE_REPO_NAME: { value: props.ecrRepo.repositoryName },
         IMAGE_TAG: { value: config.docker.imageTag },
       },
-      buildSpec: BuildSpec.fromSourceFilename('buildspec.yml'),
+      buildSpec: BuildSpec.fromSourceFilename('wordpress/buildspec.yml'),
     });
 
     // === Infra Deploy Project ===
