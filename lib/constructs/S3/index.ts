@@ -8,7 +8,7 @@ export class StaticAssetsBucket extends Construct {
     super(scope, id);
 
     this.bucket = new Bucket(this, 'StaticAssetsBucket', {
-      bucketName: 'wp-static-assets-bucket',
+      bucketName: 'wp-static-assets-bucket-new',
       publicReadAccess: false,
       accessControl: BucketAccessControl.PRIVATE,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
