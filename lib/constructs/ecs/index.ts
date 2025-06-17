@@ -1,10 +1,17 @@
 import { Construct } from 'constructs';
-import { Cluster, FargateTaskDefinition, ContainerImage, LogDriver, Secret, FargateService } from 'aws-cdk-lib/aws-ecs';
-import * as ec2 from "aws-cdk-lib/aws-ec2";
-import { Vpc, SecurityGroup, Peer, Port } from 'aws-cdk-lib/aws-ec2';
+import {
+  Cluster,
+  FargateTaskDefinition,
+  ContainerImage,
+  LogDrivers,
+  Secret,
+  FargateService,
+} from 'aws-cdk-lib/aws-ecs';
+import { Vpc, SecurityGroup, Peer, Port, SubnetType } from 'aws-cdk-lib/aws-ec2';
 import { Repository } from 'aws-cdk-lib/aws-ecr';
 import { DatabaseInstance } from 'aws-cdk-lib/aws-rds';
 import { Duration } from 'aws-cdk-lib';
+import config from '../../config';
 
 export class MyEcs extends Construct {
   public readonly fargateService: FargateService;
@@ -13,21 +20,20 @@ export class MyEcs extends Construct {
   constructor(scope: Construct, id: string, vpc: Vpc, ecrRepo: Repository, dbInstance: DatabaseInstance) {
     super(scope, id);
 
-    const cluster = new Cluster(this, 'MyCluster', { vpc });
+    const cluster = new Cluster(this, 'Cluster', { vpc });
 
-    const taskDef = new FargateTaskDefinition(this, 'MyTaskDef', {
+    const taskDef = new FargateTaskDefinition(this, 'TaskDef', {
       cpu: 512,
       memoryLimitMiB: 1024,
     });
 
     taskDef.addContainer('WordpressContainer', {
-      image: ContainerImage.fromEcrRepository(ecrRepo, 'latest'),
-      portMappings: [{ containerPort: 80 }],
-      logging: LogDriver.awsLogs({ streamPrefix: 'wordpress', logRetention: 7 }),
+      image: ContainerImage.fromEcrRepository(ecrRepo, config.docker.imageTag),
+      portMappings: [{ containerPort: config.ecs.containerPort }],
       environment: {
         WORDPRESS_DB_HOST: dbInstance.dbInstanceEndpointAddress,
-        WORDPRESS_DB_USER: 'admin',
-        WORDPRESS_DB_NAME: 'wordpressdb',
+        WORDPRESS_DB_USER: config.rds.dbUser,
+        WORDPRESS_DB_NAME: config.rds.dbName,
       },
       secrets: {
         WORDPRESS_DB_PASSWORD: Secret.fromSecretsManager(dbInstance.secret!, 'password'),
@@ -38,20 +44,24 @@ export class MyEcs extends Construct {
         timeout: Duration.seconds(5),
         retries: 3,
       },
+      logging: LogDrivers.awsLogs({ streamPrefix: 'wordpress' }),
     });
 
+    // ECS Security Group
     this.securityGroup = new SecurityGroup(this, 'ECSSecurityGroup', { vpc });
-    this.securityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(80), 'Allow HTTP from anywhere');
+    this.securityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(80), 'Allow HTTP');
 
-    dbInstance.connections.allowDefaultPortFrom(this.securityGroup, 'Allow ECS access to RDS');
+    // Allow ECS to access RDS
+    dbInstance.connections.allowDefaultPortFrom(this.securityGroup, 'Allow ECS to access RDS');
 
-    this.fargateService = new FargateService(this, 'MyFargateService', {
+    // Fargate Service
+    this.fargateService = new FargateService(this, 'FargateService', {
       cluster,
       taskDefinition: taskDef,
       desiredCount: 1,
       assignPublicIp: true,
       securityGroups: [this.securityGroup],
-      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
+      vpcSubnets: { subnetType: SubnetType.PUBLIC },
     });
   }
 }

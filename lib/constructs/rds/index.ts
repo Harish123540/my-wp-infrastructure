@@ -1,7 +1,19 @@
 import { Construct } from 'constructs';
-import { DatabaseInstance, DatabaseInstanceEngine, MysqlEngineVersion, Credentials } from 'aws-cdk-lib/aws-rds';
-import { InstanceType, InstanceClass, InstanceSize, SubnetType } from 'aws-cdk-lib/aws-ec2';
-import { Vpc } from 'aws-cdk-lib/aws-ec2';
+import {
+  DatabaseInstance,
+  DatabaseInstanceEngine,
+  MysqlEngineVersion,
+  Credentials,
+} from 'aws-cdk-lib/aws-rds';
+import {
+  InstanceType,
+  InstanceClass,
+  InstanceSize,
+  SubnetType,
+  Vpc,
+} from 'aws-cdk-lib/aws-ec2';
+
+import config from '../../config';
 
 export class MyRds extends Construct {
   public readonly dbInstance: DatabaseInstance;
@@ -16,9 +28,11 @@ export class MyRds extends Construct {
       allocatedStorage: 20,
       multiAz: false,
       publiclyAccessible: false,
-      credentials: Credentials.fromGeneratedSecret('admin'),
-      databaseName: 'wordpressdb',
-      vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+      credentials: Credentials.fromGeneratedSecret(config.rds.dbUser),
+      databaseName: config.rds.dbName,
+      vpcSubnets: {
+        subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+      },
       deletionProtection: false,
     });
   }

@@ -1,0 +1,24 @@
+{
+  "projectName": "wordpress",
+  "github": {
+    "owner": "Harish123540",
+    "infraRepo": "my-wp-infrastructure",
+    "appRepo": "wordpress",
+    "infraBranch": "main",
+    "appBranch": "master"
+  },
+  "docker": {
+    "imageTag": "latest"
+  },
+  "ecs": {
+    "containerPort": 80
+  },
+  "rds": {
+    "dbName": "wordpressdb",
+    "dbUser": "admin"
+  },
+  "aws": {
+    "region": "ap-south-1",
+    "accountId": "975826764450"
+  }
+}
