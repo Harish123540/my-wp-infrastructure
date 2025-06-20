@@ -46,14 +46,14 @@ export class MyEcs extends Construct {
       portMappings: [{ containerPort: config.ecs.containerPort }],
       environment: {
         WORDPRESS_DB_HOST: dbInstance.dbInstanceEndpointAddress,
-        WORDPRESS_DB_USER: config.rds.dbUser,
-        WORDPRESS_DB_NAME: config.rds.dbName,
+        WORDPRESS_DB_NAME: config.rds.dbName, // 'wordpressdb'
       },
       secrets: {
+        WORDPRESS_DB_USER: Secret.fromSecretsManager(dbInstance.secret!, 'username'),
         WORDPRESS_DB_PASSWORD: Secret.fromSecretsManager(dbInstance.secret!, 'password'),
       },
       healthCheck: {
-        command: ['CMD-SHELL', 'curl -f http://localhost/ || exit 1'],
+        command: ['CMD-SHELL', 'curl -f http://localhost/wp-login.php || exit 1'],
         interval: Duration.seconds(30),
         timeout: Duration.seconds(5),
         retries: 3,
