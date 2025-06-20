@@ -66,24 +66,41 @@ export class MyEcs extends Construct {
 
     dbInstance.connections.allowDefaultPortFrom(this.securityGroup, 'Allow ECS to access RDS');
 
+    // this.fargateService = new FargateService(this, 'FargateService', {
+    //   cluster,
+    //   taskDefinition: taskDef,
+    //   desiredCount: 1,
+    //   assignPublicIp: true,
+    //   securityGroups: [this.securityGroup],
+    //   vpcSubnets: { subnetType: SubnetType.PUBLIC },
+
+    //   // ✅ Correct property name
+    //   circuitBreaker: {
+    //     rollback: true,
+    //   },
+
+    //   // Optional - improve deployment behavior
+    //   deploymentController: {
+    //     type: DeploymentControllerType.ECS,
+    //   },
+
+    //   minHealthyPercent: 100,
+    //   maxHealthyPercent: 200,
+    // });
     this.fargateService = new FargateService(this, 'FargateService', {
       cluster,
       taskDefinition: taskDef,
       desiredCount: 1,
-      assignPublicIp: true,
+      assignPublicIp: true, // ✅ because we’re in PUBLIC subnet
       securityGroups: [this.securityGroup],
       vpcSubnets: { subnetType: SubnetType.PUBLIC },
-
-      // ✅ Correct property name
+    
       circuitBreaker: {
         rollback: true,
       },
-
-      // Optional - improve deployment behavior
       deploymentController: {
         type: DeploymentControllerType.ECS,
       },
-
       minHealthyPercent: 100,
       maxHealthyPercent: 200,
     });
