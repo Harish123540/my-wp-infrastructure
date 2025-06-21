@@ -56,12 +56,12 @@ export class MyEcs extends Construct {
         WORDPRESS_DB_PASSWORD: Secret.fromSecretsManager(dbInstance.secret!, 'password'),
       },
       logging: LogDrivers.awsLogs({ streamPrefix: 'wordpress' }),
-      healthCheck: {
-        command: ['CMD-SHELL', 'curl -f http://localhost/wp-login.php || exit 1'],
-        interval: Duration.seconds(30),
-        timeout: Duration.seconds(5),
-        retries: 3,
-      },
+      // healthCheck: {
+      //   command: ['CMD-SHELL', 'curl -f http://localhost/wp-login.php || exit 1'],
+      //   interval: Duration.seconds(30),
+      //   timeout: Duration.seconds(5),
+      //   retries: 3,
+      // },
     });
 
     // ECS Security Group
@@ -76,11 +76,11 @@ export class MyEcs extends Construct {
       cluster,
       taskDefinition: taskDef,
       desiredCount: 1,
-      assignPublicIp: true, // ✅ in public subnet
+      assignPublicIp: true, 
       securityGroups: [this.securityGroup],
       vpcSubnets: { subnetType: SubnetType.PUBLIC },
       circuitBreaker: {
-        rollback: true,
+        rollback: false,
       },
       deploymentController: {
         type: DeploymentControllerType.ECS,
