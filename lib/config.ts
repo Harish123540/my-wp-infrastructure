@@ -21,8 +21,8 @@ const config = {
     containerPort: Number(process.env.ECS_CONTAINER_PORT),
   },
   rds: {
-    dbName: process.env.RDS_DB_NAME!,
-    dbUser: process.env.RDS_DB_USER!,
+    dbName: 'wordpressdb',
+    dbUser: 'admin',
   },
 };
 
