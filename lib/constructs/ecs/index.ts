@@ -36,6 +36,7 @@ export class MyEcs extends Construct {
     const imageAsset = new DockerImageAsset(this, 'WordpressImage', {
       directory: path.join(__dirname, '../../../../wordpress'),
     });
+    
 
     // Task Definition
     const taskDef = new FargateTaskDefinition(this, 'TaskDef', {
