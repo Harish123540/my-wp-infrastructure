@@ -21,31 +21,17 @@ export class MyRds extends Construct {
   constructor(scope: Construct, id: string, vpc: Vpc) {
     super(scope, id);
 
-    // this.dbInstance = new DatabaseInstance(this, 'WordpressDB', {
-    //   engine: DatabaseInstanceEngine.mysql({ version: MysqlEngineVersion.VER_8_0_36 }),
-    //   instanceType: InstanceType.of(InstanceClass.BURSTABLE3, InstanceSize.SMALL),
-    //   vpc,
-    //   allocatedStorage: 20,
-    //   multiAz: false,
-    //   publiclyAccessible: false,
-    //   credentials: Credentials.fromGeneratedSecret(config.rds.dbUser),
-    //   databaseName: config.rds.dbName,
-    //   vpcSubnets: {
-    //     subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-    //   },
-    //   deletionProtection: false,
-    // });
     this.dbInstance = new DatabaseInstance(this, 'WordpressDB', {
       engine: DatabaseInstanceEngine.mysql({ version: MysqlEngineVersion.VER_8_0_36 }),
       instanceType: InstanceType.of(InstanceClass.BURSTABLE3, InstanceSize.SMALL),
       vpc,
       allocatedStorage: 20,
       multiAz: false,
-      publiclyAccessible: true, // ✅ allow public access (ONLY FOR TESTING)
+      publiclyAccessible: true, // ✅ for testing
       credentials: Credentials.fromGeneratedSecret(config.rds.dbUser),
       databaseName: config.rds.dbName,
       vpcSubnets: {
-        subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: SubnetType.PUBLIC, // ✅ match ECS placement
       },
       deletionProtection: false,
     });

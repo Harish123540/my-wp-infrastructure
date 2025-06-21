@@ -8,7 +8,6 @@ import {
   Secret,
   FargateService,
   ContainerImage,
-  DeploymentCircuitBreaker,
 } from 'aws-cdk-lib/aws-ecs';
 import {
   Vpc,
@@ -30,71 +29,56 @@ export class MyEcs extends Construct {
   constructor(scope: Construct, id: string, vpc: Vpc, ecrRepo: Repository, dbInstance: DatabaseInstance) {
     super(scope, id);
 
+    // ECS Cluster
     const cluster = new Cluster(this, 'Cluster', { vpc });
 
+    // Build Docker Image from WordPress repo
     const imageAsset = new DockerImageAsset(this, 'WordpressImage', {
       directory: path.join(__dirname, '../../../../wordpress'),
     });
 
+    // Task Definition
     const taskDef = new FargateTaskDefinition(this, 'TaskDef', {
       cpu: 512,
       memoryLimitMiB: 1024,
     });
 
+    // Container setup
     taskDef.addContainer('WordpressContainer', {
       image: ContainerImage.fromDockerImageAsset(imageAsset),
       portMappings: [{ containerPort: config.ecs.containerPort }],
       environment: {
         WORDPRESS_DB_HOST: dbInstance.dbInstanceEndpointAddress,
-        WORDPRESS_DB_NAME: config.rds.dbName, // 'wordpressdb'
+        WORDPRESS_DB_NAME: config.rds.dbName,
       },
       secrets: {
         WORDPRESS_DB_USER: Secret.fromSecretsManager(dbInstance.secret!, 'username'),
         WORDPRESS_DB_PASSWORD: Secret.fromSecretsManager(dbInstance.secret!, 'password'),
       },
+      logging: LogDrivers.awsLogs({ streamPrefix: 'wordpress' }),
       healthCheck: {
         command: ['CMD-SHELL', 'curl -f http://localhost/wp-login.php || exit 1'],
         interval: Duration.seconds(30),
         timeout: Duration.seconds(5),
         retries: 3,
       },
-      logging: LogDrivers.awsLogs({ streamPrefix: 'wordpress' }),
     });
 
+    // ECS Security Group
     this.securityGroup = new SecurityGroup(this, 'ECSSecurityGroup', { vpc });
     this.securityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(80), 'Allow HTTP');
 
+    // Allow ECS access to RDS
     dbInstance.connections.allowDefaultPortFrom(this.securityGroup, 'Allow ECS to access RDS');
 
-    // this.fargateService = new FargateService(this, 'FargateService', {
-    //   cluster,
-    //   taskDefinition: taskDef,
-    //   desiredCount: 1,
-    //   assignPublicIp: true,
-    //   securityGroups: [this.securityGroup],
-    //   vpcSubnets: { subnetType: SubnetType.PUBLIC },
-
-    //   // ✅ Correct property name
-    //   circuitBreaker: {
-    //     rollback: true,
-    //   },
-
-    //   // Optional - improve deployment behavior
-    //   deploymentController: {
-    //     type: DeploymentControllerType.ECS,
-    //   },
-
-    //   minHealthyPercent: 100,
-    //   maxHealthyPercent: 200,
-    // });
+    // ECS Service (public-facing)
     this.fargateService = new FargateService(this, 'FargateService', {
       cluster,
       taskDefinition: taskDef,
       desiredCount: 1,
-      assignPublicIp: true, // ✅ because we’re in PUBLIC subnet
+      assignPublicIp: true, // ✅ in public subnet
       securityGroups: [this.securityGroup],
       vpcSubnets: { subnetType: SubnetType.PUBLIC },
-    
       circuitBreaker: {
         rollback: true,
       },
