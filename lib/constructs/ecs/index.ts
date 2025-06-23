@@ -57,14 +57,19 @@ export class MyEcs extends Construct {
         WORDPRESS_DB_PASSWORD: Secret.fromSecretsManager(dbInstance.secret!, 'password'),
       },
       logging: LogDrivers.awsLogs({ streamPrefix: 'wordpress' }),
-      // healthCheck: {
-      //   command: ['CMD-SHELL', 'curl -f http://localhost/wp-login.php || exit 1'],
-      //   interval: Duration.seconds(30),
-      //   timeout: Duration.seconds(5),
-      //   retries: 3,
-      // },
+      healthCheck: {
+        command: ['CMD-SHELL', 'curl -f http://localhost/wp-login.php || exit 1'],
+        interval: Duration.seconds(30),
+        timeout: Duration.seconds(5),
+        retries: 3,
+      },
     });
-
+    taskDef.addContainer('DebugContainer', {
+      image: ContainerImage.fromRegistry('amazonlinux'),
+      command: ['sleep', '3600'],
+      essential: false, // <- Important! ECS won't fail if this crashes
+      logging: LogDrivers.awsLogs({ streamPrefix: 'debug' }),
+    });
     // ECS Security Group
     this.securityGroup = new SecurityGroup(this, 'ECSSecurityGroup', { vpc });
     this.securityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(80), 'Allow HTTP');
@@ -81,7 +86,7 @@ export class MyEcs extends Construct {
       securityGroups: [this.securityGroup],
       vpcSubnets: { subnetType: SubnetType.PUBLIC },
       circuitBreaker: {
-        rollback: false,
+        rollback: true,
       },
       deploymentController: {
         type: DeploymentControllerType.ECS,

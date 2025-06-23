@@ -16,7 +16,7 @@ import { IRepository } from 'aws-cdk-lib/aws-ecr';
 import { FargateService } from 'aws-cdk-lib/aws-ecs';
 import { Duration } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import config from '../../config'; // ✅ import centralized config
+import config from '../../config'; //  import centralized config
 
 interface CodePipelineProps {
   githubTokenSecret: ISecret;

@@ -28,11 +28,11 @@ export class MyRds extends Construct {
       vpc,
       allocatedStorage: 20,
       multiAz: false,
-      publiclyAccessible: true, // ✅ for testing
+      publiclyAccessible: true, //  for testing
       credentials: Credentials.fromGeneratedSecret(config.rds.dbUser),
       databaseName: config.rds.dbName,
       vpcSubnets: {
-        subnetType: SubnetType.PUBLIC, // ✅ match ECS placement
+        subnetType: SubnetType.PUBLIC, //  match ECS placement
       },
       deletionProtection: false,
     });

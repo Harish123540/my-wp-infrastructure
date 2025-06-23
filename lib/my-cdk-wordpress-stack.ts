@@ -42,10 +42,10 @@ export class MyCdkWpStack extends Stack {
     });
 
 
-    // ✅ S3 Static Assets Bucket
+    //  S3 Static Assets Bucket
     new StaticAssetsBucket(this, 'StaticAssets');
 
-    // ✅ CloudWatch Monitoring for ECS & RDS
+    //  CloudWatch Monitoring for ECS & RDS
     new Monitoring(this, 'MonitoringConstruct', {
       ecsService: ecs.fargateService,
       rdsInstance: rds,
