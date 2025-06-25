@@ -57,6 +57,13 @@ export class MyEcs extends Construct {
         WORDPRESS_DB_PASSWORD: Secret.fromSecretsManager(dbInstance.secret!, 'password'),
       },
       logging: LogDrivers.awsLogs({ streamPrefix: 'wordpress' }),
+      // healthCheck: {
+      //   command: ['CMD-SHELL', 'curl -f http://localhost/wp-login.php || exit 1'],
+      //   interval: Duration.seconds(30),
+      //   timeout: Duration.seconds(5),
+      //   startPeriod: Duration.seconds(10),
+      //   retries: 3,
+      // },
     });
     
     taskDef.addContainer('DebugContainer', {
