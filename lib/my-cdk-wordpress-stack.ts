@@ -37,10 +37,10 @@ export class MyCdkWpStack extends Stack {
     pipeline.addEcsStage(ecs.fargateService); // 🔄 dynamically add ECS deployment after pipeline created
 
     new StaticAssetsBucket(this, 'StaticAssets');
-    new Monitoring(this, 'MonitoringConstruct', {
-      ecsService: ecs.fargateService,
-      rdsInstance: rds,
-    });
+    // new Monitoring(this, 'MonitoringConstruct', {
+    //   ecsService: ecs.fargateService,
+    //   rdsInstance: rds,
+    // });
 
     new CfnOutput(this, 'RDS_Endpoint', {
       value: rds.dbInstanceEndpointAddress,

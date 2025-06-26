@@ -100,15 +100,7 @@ export class MyCodePipeline extends Construct {
         },
       }),
     });
-    infraDeployProject.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ['s3:GetObject', 's3:PutObject', 's3:ListBucket'],
-        resources: [
-          `arn:aws:s3:::cdk-hnb659fds-assets-${props.accountId}-${props.region}`,
-          `arn:aws:s3:::cdk-hnb659fds-assets-${props.accountId}-${props.region}/*`,
-        ],
-      })
-    );
+
     // === IAM Permissions ===
     [dockerBuildProject, infraDeployProject].forEach((project) => {
       project.addToRolePolicy(
@@ -125,12 +117,23 @@ export class MyCodePipeline extends Construct {
             'secretsmanager:*',
             'elasticloadbalancing:*',
             'application-autoscaling:*',
-            's3:*',
+            'sts:AssumeRole',
+            's3:GetObject',
+            's3:PutObject',
+            's3:ListBucket',
           ],
-          resources: ['*'],
+          resources: [
+            '*', 
+            `arn:aws:iam::${props.accountId}:role/cdk-hnb659fds-deploy-role-*`,
+            `arn:aws:iam::${props.accountId}:role/cdk-hnb659fds-file-publishing-role-*`,
+            `arn:aws:iam::${props.accountId}:role/cdk-hnb659fds-lookup-role-*`,
+            `arn:aws:s3:::cdk-hnb659fds-assets-${props.accountId}-${props.region}`,
+            `arn:aws:s3:::cdk-hnb659fds-assets-${props.accountId}-${props.region}/*`,
+          ],
         }),
       );
     });
+    
 
     // === Grant ECR Access ===
     props.ecrRepo.grantPullPush(dockerBuildProject);

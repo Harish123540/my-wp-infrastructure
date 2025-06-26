@@ -4,9 +4,17 @@
     "ap-south-1b",
     "ap-south-1c"
   ],
-  "availability-zones:account=975826764450:region=ap-south-1": [
-    "ap-south-1a",
-    "ap-south-1b",
-    "ap-south-1c"
+  "availability-zones:account=975826764450:region=us-east-2": [
+    "us-east-2a",
+    "us-east-2b",
+    "us-east-2c",
+    "us-east-2d",
+    "us-east-2e",
+    "us-east-2f"
+  ],
+  "availability-zones:account=975826764450:region=us-east-2": [
+    "us-east-2a",
+    "us-east-2b",
+    "us-east-2c"
   ]
 }
