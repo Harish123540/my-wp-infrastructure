@@ -13,6 +13,7 @@ import { StaticAssetsBucket } from './constructs/S3';
 import { Monitoring } from './constructs/monitoring';
 import config from './config';
 
+
 export class MyCdkWpStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -21,6 +22,7 @@ export class MyCdkWpStack extends Stack {
     const rds = new MyRds(this, 'MyRdsConstruct', vpc).dbInstance;
     const ecr = new MyEcr(this, 'MyEcrConstruct').repository;
     const githubToken = new GithubToken(this, 'GithubTokenConstruct').secret;
+    //const staticAssets = new StaticAssetsBucket(this, 'StaticAssetsBucketV2');
 
     // Phase 1: Pipeline created without ECS service (image will be pushed first)
     const pipeline = new MyCodePipeline(this, 'MyPipeline', {
@@ -34,7 +36,9 @@ export class MyCdkWpStack extends Stack {
     // Phase 2: ECS service uses ECR image (which was pushed via pipeline)
     const ecs = new MyEcs(this, 'MyEcsConstruct', vpc, ecr, rds);
 
-    pipeline.addEcsStage(ecs.fargateService); // 🔄 dynamically add ECS deployment after pipeline created
+    const staticAssets = new StaticAssetsBucket(this, 'StaticAssetsBucketV2'); 
+    pipeline.addEcsStage(ecs.fargateService, staticAssets.bucket);
+    
 
     new StaticAssetsBucket(this, 'StaticAssets');
     // new Monitoring(this, 'MonitoringConstruct', {

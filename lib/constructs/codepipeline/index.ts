@@ -16,6 +16,11 @@ import { FargateService } from 'aws-cdk-lib/aws-ecs';
 import { Duration } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import config from '../../config';
+import { StaticAssetsBucket } from '../S3';
+import { ArnPrincipal } from 'aws-cdk-lib/aws-iam';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { Stack } from 'aws-cdk-lib';
+
 
 interface CodePipelineProps {
   githubTokenSecret: ISecret;
@@ -31,7 +36,7 @@ export class MyCodePipeline extends Construct {
 
   constructor(scope: Construct, id: string, props: CodePipelineProps) {
     super(scope, id);
-
+    const staticAssets = new StaticAssetsBucket(this, 'StaticAssetsBucketConstruct');
     // === Artifacts ===
     const infraSourceOutput = new Artifact('InfraSourceOutput');
     const appSourceOutput = new Artifact('AppSourceOutput');
@@ -114,6 +119,7 @@ export class MyCodePipeline extends Construct {
             'cloudformation:*',
             'ssm:*',
             'rds:*',
+            's3:*',
             'secretsmanager:*',
             'elasticloadbalancing:*',
             'application-autoscaling:*',
@@ -194,11 +200,43 @@ export class MyCodePipeline extends Construct {
 
     // === Stage: Deploy Application to ECS (Optional) ===
     if (props.fargateService) {
-      this.addEcsStage(props.fargateService);
+      this.addEcsStage(props.fargateService, staticAssets.bucket);
+
     }
   }
 
-  public addEcsStage(fargateService: FargateService) {
+  public addEcsStage(fargateService: FargateService, staticAssetsBucket: Bucket) {
+    const ecsDeployRole = new iam.Role(this, 'EcsDeployRole', {
+      assumedBy: new iam.ArnPrincipal(this.pipeline.role!.roleArn),
+      description: 'Role for ECS Deploy Action in CodePipeline',
+    });
+  
+    this.pipeline.artifactBucket.grantRead(ecsDeployRole);
+    staticAssetsBucket.grantRead(ecsDeployRole);
+  
+    ecsDeployRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "ecs:UpdateService",
+          "ecs:RegisterTaskDefinition",
+          "ecs:DescribeServices",
+          "ecs:DescribeTaskDefinition",
+          "ecs:DescribeTasks",
+          "ecs:ListTasks",
+          "ecs:TagResource",
+          "iam:PassRole",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:GetBucketVersioning",
+          "s3:ListBucket"
+        ],
+        resources: ["*"],
+      })
+    );
+  
     this.pipeline.addStage({
       stageName: 'Deploy-Application',
       actions: [
@@ -207,8 +245,11 @@ export class MyCodePipeline extends Construct {
           service: fargateService,
           input: this.buildOutput,
           deploymentTimeout: Duration.minutes(20),
+          role: ecsDeployRole,
         }),
       ],
     });
   }
+  
+  
 }

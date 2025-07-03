@@ -7,7 +7,8 @@ export class StaticAssetsBucket extends Construct {
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    const uniqueName = `wp-static-assets-${scope.node.addr.toLowerCase()}`;
+    const uniqueName = `wp-static-assets-${id.toLowerCase()}-${Date.now()}`;
+
     this.bucket = new Bucket(this, 'StaticAssetsBucket', {
       bucketName: uniqueName,
       publicReadAccess: false,
