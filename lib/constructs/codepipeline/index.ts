@@ -213,10 +213,10 @@ export class MyCodePipeline extends Construct {
 
   public addEcsStage(fargateService: FargateService, staticAssetsBucket: Bucket) {
     const ecsDeployRole = new iam.Role(this, 'EcsDeployRole', {
-      assumedBy: new iam.ArnPrincipal(this.pipeline.role!.roleArn),
+      assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com'),
       description: 'Role for ECS Deploy Action in CodePipeline',
     });
-
+    
     ecsDeployRole.addToPolicy(
       new iam.PolicyStatement({
         actions: [
