@@ -46,7 +46,7 @@ export class MyCodePipeline extends Construct {
     const dockerBuildProject = new PipelineProject(this, 'DockerBuildProject', {
       environment: {
         buildImage: LinuxBuildImage.STANDARD_7_0,
-        privileged: true, // for Docker
+        privileged: true,
       },
       environmentVariables: {
         AWS_DEFAULT_REGION: { value: props.region },
@@ -66,7 +66,7 @@ export class MyCodePipeline extends Construct {
           build: {
             commands: [
               'echo Building Docker image...',
-              `docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .`,
+              `docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG $CODEBUILD_SRC_DIR`,
               'docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG',
             ],
           },
@@ -74,11 +74,17 @@ export class MyCodePipeline extends Construct {
             commands: [
               'echo Pushing Docker image...',
               'docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG',
+              'echo Writing imagedefinitions.json...',
+              `echo '[{"name":"WordpressContainer","imageUri":"'$AWS_ACCOUNT_ID'.dkr.ecr.'$AWS_DEFAULT_REGION'.amazonaws.com/'$IMAGE_REPO_NAME':'$IMAGE_TAG'"}]' > imagedefinitions.json`
             ],
           },
         },
+        artifacts: {
+          files: ['imagedefinitions.json'],
+        },
       }),
     });
+    
 
     // === Infra Deploy Project ===
     const infraDeployProject = new PipelineProject(this, 'InfraDeployProject', {
@@ -210,10 +216,7 @@ export class MyCodePipeline extends Construct {
       assumedBy: new iam.ArnPrincipal(this.pipeline.role!.roleArn),
       description: 'Role for ECS Deploy Action in CodePipeline',
     });
-  
-    this.pipeline.artifactBucket.grantRead(ecsDeployRole);
-    staticAssetsBucket.grantRead(ecsDeployRole);
-  
+
     ecsDeployRole.addToPolicy(
       new iam.PolicyStatement({
         actions: [
@@ -236,6 +239,11 @@ export class MyCodePipeline extends Construct {
         resources: ["*"],
       })
     );
+    this.pipeline.artifactBucket.grantRead(ecsDeployRole);
+    this.pipeline.artifactBucket.grantReadWrite(ecsDeployRole); 
+    
+    //this.pipeline.artifactBucket.grantRead(ecsDeployRole);
+    staticAssetsBucket.grantRead(ecsDeployRole);
   
     this.pipeline.addStage({
       stageName: 'Deploy-Application',

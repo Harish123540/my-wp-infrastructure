@@ -1,8 +1,5 @@
-// ✅ FINAL UPGRADED CDK CODE WITH FULLY AUTOMATED DEPLOYMENT
-
 import { Stack, StackProps, CfnOutput, Fn } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-
 import { MyVpc } from './constructs/vpc';
 import { MyRds } from './constructs/rds';
 import { MyEcr } from './constructs/ecr';
@@ -36,11 +33,11 @@ export class MyCdkWpStack extends Stack {
     // Phase 2: ECS service uses ECR image (which was pushed via pipeline)
     const ecs = new MyEcs(this, 'MyEcsConstruct', vpc, ecr, rds);
 
-    const staticAssets = new StaticAssetsBucket(this, 'StaticAssetsBucketV2'); 
-    pipeline.addEcsStage(ecs.fargateService, staticAssets.bucket);
-    
+    const staticAssets = new StaticAssetsBucket(this, 'StaticAssets');
+pipeline.addEcsStage(ecs.fargateService, staticAssets.bucket);
 
-    new StaticAssetsBucket(this, 'StaticAssets');
+
+    //new StaticAssetsBucket(this, 'StaticAssets');
     // new Monitoring(this, 'MonitoringConstruct', {
     //   ecsService: ecs.fargateService,
     //   rdsInstance: rds,
