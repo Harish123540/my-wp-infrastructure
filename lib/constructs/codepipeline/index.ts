@@ -33,9 +33,12 @@ interface CodePipelineProps {
 export class MyCodePipeline extends Construct {
   private readonly pipeline: Pipeline;
   private readonly buildOutput: Artifact;
+  private readonly accountId: string;
 
   constructor(scope: Construct, id: string, props: CodePipelineProps) {
     super(scope, id);
+
+    this.accountId = props.accountId;
     const staticAssets = new StaticAssetsBucket(this, 'StaticAssetsBucketConstruct');
     // === Artifacts ===
     const infraSourceOutput = new Artifact('InfraSourceOutput');
@@ -216,7 +219,7 @@ export class MyCodePipeline extends Construct {
       assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com'),
       description: 'Role for ECS Deploy Action in CodePipeline',
     });
-    
+  
     ecsDeployRole.addToPolicy(
       new iam.PolicyStatement({
         actions: [
@@ -239,10 +242,9 @@ export class MyCodePipeline extends Construct {
         resources: ["*"],
       })
     );
+  
     this.pipeline.artifactBucket.grantRead(ecsDeployRole);
-    this.pipeline.artifactBucket.grantReadWrite(ecsDeployRole); 
-    
-    //this.pipeline.artifactBucket.grantRead(ecsDeployRole);
+    this.pipeline.artifactBucket.grantReadWrite(ecsDeployRole);
     staticAssetsBucket.grantRead(ecsDeployRole);
   
     this.pipeline.addStage({
@@ -258,6 +260,7 @@ export class MyCodePipeline extends Construct {
       ],
     });
   }
+  
   
   
 }
